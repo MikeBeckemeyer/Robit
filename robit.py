@@ -10,6 +10,7 @@ class robit:
     def __init__(self) -> None:
         self.name = "bot"+str(robit.botNum)
         self.num = robit.botNum
+        self.deadBot = False
         self.posX = random.randrange(1,49) * 10
         self.posY = random.randrange(1,49) * 10
         robit.botNum += 1
@@ -26,19 +27,18 @@ class robit:
         #print("Guy: " + str(thisGuy.posX) + ", " + str(thisGuy.posY))
         for thisRobit in robit._liveRobits:
             #print(str(thisRobit.name) + ": " + str(thisRobit.posX) + ", " + str(thisRobit.posY))
-            if thisRobit.deadBot == False:
-                if thisRobit.posX < thisGuy.posX:
-                    thisRobit.posX += 10
-                    thisRobit.gameSprite.move(10,0)
-                elif thisRobit.posX > thisGuy.posX:
-                    thisRobit.posX -= 10
-                    thisRobit.gameSprite.move(-10,0)
-                if thisRobit.posY < thisGuy.posY:
-                    thisRobit.posY += 10
-                    thisRobit.gameSprite.move(0,10)
-                elif thisRobit.posY > thisGuy.posY:
-                    thisRobit.posY -= 10
-                    thisRobit.gameSprite.move(0,-10)
+            if thisRobit.posX < thisGuy.posX:
+                thisRobit.posX += 10
+                thisRobit.gameSprite.move(10,0)
+            elif thisRobit.posX > thisGuy.posX:
+                thisRobit.posX -= 10
+                thisRobit.gameSprite.move(-10,0)
+            if thisRobit.posY < thisGuy.posY:
+                thisRobit.posY += 10
+                thisRobit.gameSprite.move(0,10)
+            elif thisRobit.posY > thisGuy.posY:
+                thisRobit.posY -= 10
+                thisRobit.gameSprite.move(0,-10)
 
 class hero:
     color = "green"
@@ -46,7 +46,43 @@ class hero:
         self.name = "hero"
         self.posX = 250  
         self.posY = 250
-        self.gameObject = Circle(Point(self.posX,self.posY),5)
+        self.gameSprite = Circle(Point(self.posX,self.posY),5)
+
+    def MoveHero(self):
+        key = thisWindow.getKey()
+        key = key.upper()
+        match key:
+            case 'Q':
+                self.posX -= 10
+                self.posY -= 10
+                self.gameSprite.move(-10,-10)
+            case 'W':
+                self.posY -= 10
+                self.gameSprite.move(0,-10)
+            case 'E':
+                self.posX += 10
+                self.posY -= 10
+                self.gameSprite.move(+10,-10)
+            case 'A':
+                self.posX -= 10
+                self.gameSprite.move(-10,0)
+            case 'S':
+                self.posY += 0
+            case 'D':
+                self.posX += 10
+                self.gameSprite.move(10,0)
+            case 'Z':
+                self.posX -= 10
+                self.posY += 10
+                self.gameSprite.move(-10,10)
+            case 'X':
+                self.posY += 10
+                self.gameSprite.move(0,10)
+            case 'C':
+                self.posX += 10
+                self.posY += 10
+                self.gameSprite.move(10,10)
+
 
 class explosion:
     _allExplosions = []
@@ -59,6 +95,14 @@ class explosion:
         self.posY = posY
         explosion._boomPosX.append(posX)
         explosion._boomPosY.append(posY)
+    
+    def CheckDupe(posX,posY):  
+        for boom in explosion._allExplosions:
+            if boom.posX == posX and boom.posY == posY:
+                return True
+            else:
+                continue
+        return False
 
     
 def FindCollisions():
@@ -72,18 +116,19 @@ def FindCollisions():
         for B in range(A+1,len(robit._liveRobits)):
             count+=1
             if robit._liveRobits[A].posX == robit._liveRobits[B].posX and robit._liveRobits[A].posY == robit._liveRobits[B].posY:
-                # print("collision! BotA: "+ str(robit._liveRobits[A].posX) +", " + str(robit._liveRobits[A].posY) + " botB: " + str(robit._liveRobits[B].posX) + ", " + str(robit._liveRobits[B].posY) )
                 if robit._liveRobits[A] not in graveyard:
                     graveyard.append(robit._liveRobits[A])
+                    robit._allRobits[A].deadBot = True
                 if robit._liveRobits[B] not in graveyard:
                     graveyard.append(robit._liveRobits[B])
+                    robit._allRobits[B].deadBot = True
 
         for boom in explosion._allExplosions:
             count+=1
             if robit._liveRobits[A].posX == boom.posX and robit._liveRobits[A].posY == boom.posY:
-                print("robit hit explosion")
                 if robit._liveRobits[A] not in graveyard:
                     graveyard.append(robit._liveRobits[A])
+                    robit._allRobits[A].deadBot = True
 
     print("checks: " + str(count))
     print("dead this turn " + str(len(graveyard)))
@@ -94,11 +139,11 @@ def FindCollisions():
             robit._deadRobits.append(dead)
         dead.gameSprite.undraw()
 
-        print("new explosion at: " + str(dead.posX) + " " + str(dead.posY))
-        boom = explosion(dead.posX,dead.posY)
-        explosion._allExplosions.append(boom)
-        boom.gameObject.setFill(explosion._color)
-        boom.gameObject.draw(thisWindow)
+        if explosion.CheckDupe(dead.posX,dead.posY) == False:
+            boom = explosion(dead.posX,dead.posY)
+            explosion._allExplosions.append(boom)
+            boom.gameObject.setFill(explosion._color)
+            boom.gameObject.draw(thisWindow)
 
     graveyard.clear()
 
@@ -121,24 +166,26 @@ def main():
     DrawGrid(thisWindow)
 
     thisGuy = hero()
-    thisGuy.gameObject.setFill(hero.color)
-    #thisGuy.gameObject.draw(thisWindow)
+    thisGuy.gameSprite.setFill(hero.color)
+    thisGuy.gameSprite.draw(thisWindow)
 
-    robit.SpawnRobits(200)
+    robit.SpawnRobits(20)
     for thisRobit in robit._allRobits:
         thisRobit.gameSprite.setFill(robit.color)
         thisRobit.gameSprite.draw(thisWindow)
 
 
     while True:
-        click = thisWindow.getMouse()
-        print(click.x)
-        if click.x > 500:
-            break
-        else:
-            robit.MoveRobits()
-            FindCollisions()
-            continue
+        click = thisWindow.checkMouse()
+        if click:
+            if click.x > 500:
+                break
+            else:
+                click = ''
+
+        thisGuy.MoveHero()
+        robit.MoveRobits()
+        FindCollisions()
 
 
     thisWindow.close()
