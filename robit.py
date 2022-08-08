@@ -2,9 +2,9 @@ import random
 from graphics import *
 
 class robit:
-    _allRobits = []
-    _liveRobits = []
-    _deadRobits = []
+    allRobits = []
+    liveRobits = []
+    deadRobits = []
     botNum = 0
     color = "blue"
     def __init__(self) -> None:
@@ -18,17 +18,17 @@ class robit:
 
     def SpawnRobits(count):
         for i in range(count):
-            if i >= len(robit._allRobits):
+            if i >= len(robit.allRobits):
                 thisRobit = robit()
-                robit._allRobits.append(thisRobit)
-                robit._liveRobits.append(thisRobit)
+                robit.allRobits.append(thisRobit)
+                robit.liveRobits.append(thisRobit)
             else:
-                robit._allRobits[i].posX = random.randrange(1,49) * 10
-                robit._allRobits[i].posY = random.randrange(1,49) * 10
-                robit._allRobits[i].gameSprite = Circle(Point(robit._allRobits[i].posX,robit._allRobits[i].posY),5)
+                robit.allRobits[i].posX = random.randrange(1,49) * 10
+                robit.allRobits[i].posY = random.randrange(1,49) * 10
+                robit.allRobits[i].gameSprite = Circle(Point(robit.allRobits[i].posX,robit.allRobits[i].posY),5)
 
     def MoveRobits():
-        for thisRobit in robit._liveRobits:
+        for thisRobit in robit.liveRobits:
             if thisRobit.posX < thisGuy.posX:
                 thisRobit.posX += 10
                 thisRobit.gameSprite.move(10,0)
@@ -43,7 +43,7 @@ class robit:
                 thisRobit.gameSprite.move(0,-10)
 
 class hero:
-    _moveSet = [(-10,-10),(0,-10),(+10,-10),(-10,0),(0,0),(10,0),(-10,10),(0,10),(10,10)]
+    moveSet = [(-10,-10),(0,-10),(+10,-10),(-10,0),(0,0),(10,0),(-10,10),(0,10),(10,10)]
     color = "green"
     def __init__(self) -> None:
         self.name = "hero"
@@ -52,16 +52,16 @@ class hero:
         self.gameSprite = Circle(Point(self.posX,self.posY),5)
 
     def ValidMove(dir):
-        if thisGuy.posX + hero._moveSet[dir][0] > 500 or thisGuy.posX + hero._moveSet[dir][0] < 10:
+        if thisGuy.posX + hero.moveSet[dir][0] > 500 or thisGuy.posX + hero.moveSet[dir][0] < 10:
             print("bad move")
             return False
-        elif thisGuy.posY + hero._moveSet[dir][1] > 500 or thisGuy.posY + hero._moveSet[dir][1] < 10:
+        elif thisGuy.posY + hero.moveSet[dir][1] > 500 or thisGuy.posY + hero.moveSet[dir][1] < 10:
             print("bad move")
             return False
         else:
-            thisGuy.gameSprite.move(hero._moveSet[dir][0],hero._moveSet[dir][1])
-            thisGuy.posX += hero._moveSet[dir][0]
-            thisGuy.posY += hero._moveSet[dir][1]
+            thisGuy.gameSprite.move(hero.moveSet[dir][0],hero.moveSet[dir][1])
+            thisGuy.posX += hero.moveSet[dir][0]
+            thisGuy.posY += hero.moveSet[dir][1]
             return True
 
     def MoveInput(self):
@@ -71,7 +71,7 @@ class hero:
             match key:
                 case 'Q':
                     if hero.ValidMove(0):
-                      break
+                         break
                     else:
                         continue
                 case 'W':
@@ -81,37 +81,37 @@ class hero:
                         continue
                 case 'E':
                     if hero.ValidMove(2):
-                      break
+                        break
                     else:
                         continue
                 case 'A':
                     if hero.ValidMove(3):
-                      break
+                        break
                     else:
                         continue
                 case 'S':
                     if hero.ValidMove(4):
-                      break
+                         break
                     else:
                         continue
                 case 'D':
                     if hero.ValidMove(5):
-                      break
+                        break
                     else:
                         continue
                 case 'Z':
                     if hero.ValidMove(6):
-                      break
+                        break
                     else:
                         continue
                 case 'X':
                     if hero.ValidMove(7):
-                      break
+                         break
                     else:
                         continue
                 case 'C':
                     if hero.ValidMove (8):
-                      break
+                         break
                     else:
                         continue
                 case 'T':
@@ -137,19 +137,19 @@ class hero:
 
 
 class explosion:
-    _allExplosions = []
-    _boomPosX = []
-    _boomPosY = []
-    _color="red"
+    allExplosions = []
+    boomPosX = []
+    boomPosY = []
+    color="red"
     def __init__(self,posX,posY) -> None:
         self.gameSprite = Rectangle(Point(posX+5,posY+5),Point(posX-5,posY-5))
         self.posX = posX
         self.posY = posY
-        explosion._boomPosX.append(posX)
-        explosion._boomPosY.append(posY)
+        explosion.boomPosX.append(posX)
+        explosion.boomPosY.append(posY)
     
     def CheckDupe(posX,posY):  
-        for boom in explosion._allExplosions:
+        for boom in explosion.allExplosions:
             if boom.posX == posX and boom.posY == posY:
                 return True
             else:
@@ -158,49 +158,49 @@ class explosion:
 
     
 def FindCollisions():
-    #compare all pairs of bots and see if botA is on the same tile
+    #compare all pairs of bots and see if botA is on the same tile as B or an explosion
     count = 0
     graveyard = []
-    print("live: " + str(len(robit._liveRobits)))
-    print("dead: " + str(len(robit._deadRobits)))  
+    print("live: " + str(len(robit.liveRobits)))
+    print("dead: " + str(len(robit.deadRobits)))  
 
-    for A in range(len(robit._liveRobits)):
-        if robit._liveRobits[A].posX == thisGuy.posX and robit._liveRobits[A].posY == thisGuy.posY:
+    for A in range(len(robit.liveRobits)):
+        if robit.liveRobits[A].posX == thisGuy.posX and robit.liveRobits[A].posY == thisGuy.posY:
             currentLevel = 0
             print("Game Over")
             NewLevel()
 
-    for A in range(len(robit._liveRobits)):
-        for B in range(A+1,len(robit._liveRobits)):
+    for A in range(len(robit.liveRobits)):
+        for B in range(A+1,len(robit.liveRobits)):
             count+=1
-            if robit._liveRobits[A].posX == robit._liveRobits[B].posX and robit._liveRobits[A].posY == robit._liveRobits[B].posY:
-                if robit._liveRobits[A] not in graveyard:
-                    graveyard.append(robit._liveRobits[A])
-                    robit._allRobits[A].deadBot = True
-                if robit._liveRobits[B] not in graveyard:
-                    graveyard.append(robit._liveRobits[B])
-                    robit._allRobits[B].deadBot = True
+            if robit.liveRobits[A].posX == robit.liveRobits[B].posX and robit.liveRobits[A].posY == robit.liveRobits[B].posY:
+                if robit.liveRobits[A] not in graveyard:
+                    graveyard.append(robit.liveRobits[A])
+                    robit.allRobits[A].deadBot = True
+                if robit.liveRobits[B] not in graveyard:
+                    graveyard.append(robit.liveRobits[B])
+                    robit.allRobits[B].deadBot = True
 
-        for boom in explosion._allExplosions:
+        for boom in explosion.allExplosions:
             count+=1
-            if robit._liveRobits[A].posX == boom.posX and robit._liveRobits[A].posY == boom.posY:
-                if robit._liveRobits[A] not in graveyard:
-                    graveyard.append(robit._liveRobits[A])
-                    robit._allRobits[A].deadBot = True
+            if robit.liveRobits[A].posX == boom.posX and robit.liveRobits[A].posY == boom.posY:
+                if robit.liveRobits[A] not in graveyard:
+                    graveyard.append(robit.liveRobits[A])
+                    robit.allRobits[A].deadBot = True
 
     #print("checks: " + str(count))
     print("dead this turn " + str(len(graveyard)))
     for dead in graveyard:
-        if dead in robit._liveRobits:
-            robit._liveRobits.remove(dead)
-        if dead not in robit._deadRobits:
-            robit._deadRobits.append(dead)
+        if dead in robit.liveRobits:
+            robit.liveRobits.remove(dead)
+        if dead not in robit.deadRobits:
+            robit.deadRobits.append(dead)
         dead.gameSprite.undraw()
 
         if explosion.CheckDupe(dead.posX,dead.posY) == False:
             boom = explosion(dead.posX,dead.posY)
-            explosion._allExplosions.append(boom)
-            boom.gameSprite.setFill(explosion._color)
+            explosion.allExplosions.append(boom)
+            boom.gameSprite.setFill(explosion.color)
             boom.gameSprite.draw(thisWindow)
 
     graveyard.clear()
@@ -219,19 +219,19 @@ def DrawGrid(thisWindow):
     border.draw(thisWindow)
 
 def NewLevel():
-    for i in range(len(explosion._allExplosions)):
-        explosion._allExplosions[0].gameSprite.undraw()
-        del explosion._allExplosions[0]
+    for i in range(len(explosion.allExplosions)):
+        explosion.allExplosions[0].gameSprite.undraw()
+        del explosion.allExplosions[0]
 
-    for thisRobit in robit._allRobits:
+    for thisRobit in robit.allRobits:
         thisRobit.gameSprite.undraw()
-        if thisRobit in robit._deadRobits:
-            robit._liveRobits.append(thisRobit)
-            robit._deadRobits.remove(thisRobit)
+        if thisRobit in robit.deadRobits:
+            robit.liveRobits.append(thisRobit)
+            robit.deadRobits.remove(thisRobit)
 
-    robit.SpawnRobits(currentLevel*2 + 20)
+    robit.SpawnRobits(currentLevel*3 + 200)
 
-    for thisRobit in robit._allRobits:
+    for thisRobit in robit.allRobits:
         thisRobit.gameSprite.setFill(robit.color)
         thisRobit.gameSprite.draw(thisWindow)
     thisGuy.gameSprite.undraw()
@@ -244,7 +244,7 @@ def NewLevel():
 
 
 def main():
-    print (hero._moveSet)
+    print (hero.moveSet)
     global thisWindow
     global currentLevel
     global thisGuy
@@ -259,7 +259,7 @@ def main():
 
 
     while True:
-        if len(robit._liveRobits) == 0:
+        if len(robit.liveRobits) == 0:
             currentLevel+=1
             NewLevel()
         thisGuy.MoveInput()
