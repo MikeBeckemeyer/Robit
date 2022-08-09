@@ -1,4 +1,5 @@
 import random
+from turtle import circle
 from graphics import *
 
 class robit:
@@ -26,21 +27,23 @@ class robit:
                 robit.allRobits[i].posX = random.randrange(1,49) * 10
                 robit.allRobits[i].posY = random.randrange(1,49) * 10
                 robit.allRobits[i].gameSprite = Circle(Point(robit.allRobits[i].posX,robit.allRobits[i].posY),5)
+                robit.liveRobits.append(robit.allRobits[i])
 
     def MoveRobits():
-        for thisRobit in robit.liveRobits:
-            if thisRobit.posX < thisGuy.posX:
-                thisRobit.posX += 10
-                thisRobit.gameSprite.move(10,0)
-            elif thisRobit.posX > thisGuy.posX:
-                thisRobit.posX -= 10
-                thisRobit.gameSprite.move(-10,0)
-            if thisRobit.posY < thisGuy.posY:
-                thisRobit.posY += 10
-                thisRobit.gameSprite.move(0,10)
-            elif thisRobit.posY > thisGuy.posY:
-                thisRobit.posY -= 10
-                thisRobit.gameSprite.move(0,-10)
+        if scores.gameOver == False:
+            for thisRobit in robit.liveRobits:
+                if thisRobit.posX < thisGuy.posX:
+                    thisRobit.posX += 10
+                    thisRobit.gameSprite.move(10,0)
+                elif thisRobit.posX > thisGuy.posX:
+                    thisRobit.posX -= 10
+                    thisRobit.gameSprite.move(-10,0)
+                if thisRobit.posY < thisGuy.posY:
+                    thisRobit.posY += 10
+                    thisRobit.gameSprite.move(0,10)
+                elif thisRobit.posY > thisGuy.posY:
+                    thisRobit.posY -= 10
+                    thisRobit.gameSprite.move(0,-10)
 
 class hero:
     moveSet = [(-10,-10),(0,-10),(+10,-10),(-10,0),(0,0),(10,0),(-10,10),(0,10),(10,10)]
@@ -57,7 +60,7 @@ class hero:
             return False
         elif thisGuy.posY + hero.moveSet[dir][1] > 500 or thisGuy.posY + hero.moveSet[dir][1] < 10:
             print("bad move")
-            return False
+            return False           
         else:
             thisGuy.gameSprite.move(hero.moveSet[dir][0],hero.moveSet[dir][1])
             thisGuy.posX += hero.moveSet[dir][0]
@@ -71,12 +74,12 @@ class hero:
             match key:
                 case 'Q':
                     if hero.ValidMove(0):
-                         break
+                        break
                     else:
                         continue
                 case 'W':
                     if hero.ValidMove(1):
-                      break
+                        break
                     else:
                         continue
                 case 'E':
@@ -120,6 +123,11 @@ class hero:
                 case 'G':
                     self.HeroWait()
                     break
+                case 'Y':
+                    if self.safeTeleport():
+                        break
+                    else:  
+                        continue
                 case _:
                     continue
         
@@ -131,9 +139,51 @@ class hero:
         self.gameSprite.setFill(hero.color)
         self.gameSprite.draw(thisWindow)
 
-    def HeroWait():
-        
-        pass
+    def safeTeleport(self):
+        dangerLocation = []
+        allMarkers = []
+        if scores.safeTeleports >= 1:
+            scores.safeTeleports -= 1
+            for i in range(len(robit.liveRobits)):
+                dangerLocation.append( (robit.liveRobits[i].posX,robit.liveRobits[i].posY ) )
+                for x in range(len(hero.moveSet)):
+                    dangerLocation.append( ((robit.liveRobits[i].posX + hero.moveSet[x][0]),(robit.liveRobits[i].posY + hero.moveSet[x][1])) )
+            
+            for i in range(len(dangerLocation)):
+                marker = Circle(Point(dangerLocation[i][0],dangerLocation[i][1]),3)
+                marker.setFill('red')
+                marker.draw(thisWindow)
+                allMarkers.append(marker)
+            time.sleep(.5)
+            for i in range(len(allMarkers)):
+                allMarkers[i].undraw()
+
+            while (True):
+                dest = [ (random.randrange(1,49) * 10, random.randrange(1,49) * 10) ]
+                if dest[0] not in dangerLocation:
+                    print("safe")
+                    self.posX = dest[0][0]
+                    self.posY = dest[0][1]
+                    self.gameSprite.undraw()
+                    self.gameSprite = Circle(Point(self.posX,self.posY),5)
+                    self.gameSprite.setFill(hero.color)
+                    self.gameSprite.draw(thisWindow)
+                    return True
+                else:
+                    print("bad location, trying again")
+                    continue
+        else:
+            print("no safe teleports available")
+            return False
+
+    def HeroWait(self):
+        while(len(robit.liveRobits) > 0):
+            time.sleep(.2)
+            robit.MoveRobits()
+            if PlayerCollision():
+                break
+            scores.safeTeleports += RobitCollisions()
+
 
 
 class explosion:
@@ -156,19 +206,21 @@ class explosion:
                 continue
         return False
 
+
+def PlayerCollision():
+    for A in range(len(robit.liveRobits)):
+        if robit.liveRobits[A].posX == thisGuy.posX and robit.liveRobits[A].posY == thisGuy.posY:
+            print("Game Over")
+            scores.gameOver = True
+            NewLevel()
+            return True
+    return False
+            
     
-def FindCollisions():
+def RobitCollisions():
     #compare all pairs of bots and see if botA is on the same tile as B or an explosion
     count = 0
     graveyard = []
-    print("live: " + str(len(robit.liveRobits)))
-    print("dead: " + str(len(robit.deadRobits)))  
-
-    for A in range(len(robit.liveRobits)):
-        if robit.liveRobits[A].posX == thisGuy.posX and robit.liveRobits[A].posY == thisGuy.posY:
-            currentLevel = 0
-            print("Game Over")
-            NewLevel()
 
     for A in range(len(robit.liveRobits)):
         for B in range(A+1,len(robit.liveRobits)):
@@ -189,7 +241,6 @@ def FindCollisions():
                     robit.allRobits[A].deadBot = True
 
     #print("checks: " + str(count))
-    print("dead this turn " + str(len(graveyard)))
     for dead in graveyard:
         if dead in robit.liveRobits:
             robit.liveRobits.remove(dead)
@@ -203,9 +254,12 @@ def FindCollisions():
             boom.gameSprite.setFill(explosion.color)
             boom.gameSprite.draw(thisWindow)
 
+    count = len(graveyard)
     graveyard.clear()
+    return count
 
-def DrawGrid(thisWindow):
+def DrawGame(thisWindow):
+    offset = 15
     for i in range(51): #draw grid lines
         vert = Line(Point((i*10)-5,0),Point((i*10)-5,510)) # verticals
         horz = Line(Point(0,(i*10)-5),Point(510,(i*10)-5)) # horizontals
@@ -218,7 +272,15 @@ def DrawGrid(thisWindow):
     border.setWidth(10)
     border.draw(thisWindow)
 
+
 def NewLevel():
+    if scores.gameOver == True:
+        scores.currentLevel = 0
+        scores.safeTeleports = 0
+
+    scores.gameOver = False
+    scores.currentLevel +=1
+
     for i in range(len(explosion.allExplosions)):
         explosion.allExplosions[0].gameSprite.undraw()
         del explosion.allExplosions[0]
@@ -226,10 +288,11 @@ def NewLevel():
     for thisRobit in robit.allRobits:
         thisRobit.gameSprite.undraw()
         if thisRobit in robit.deadRobits:
-            robit.liveRobits.append(thisRobit)
             robit.deadRobits.remove(thisRobit)
+        if thisRobit in robit.liveRobits:
+            robit.liveRobits.remove(thisRobit)
 
-    robit.SpawnRobits(currentLevel*3 + 200)
+    robit.SpawnRobits(scores.currentLevel*3 + 20)
 
     for thisRobit in robit.allRobits:
         thisRobit.gameSprite.setFill(robit.color)
@@ -240,32 +303,37 @@ def NewLevel():
     thisGuy.gameSprite = Circle(Point(thisGuy.posX,thisGuy.posY),5)
     thisGuy.gameSprite.setFill(hero.color)
     thisGuy.gameSprite.draw(thisWindow)
-     
+    scores.updateScoreboard()
+ 
+class scores:
+    currentLevel = 0
+    scoreboard = Text(Point(600,50),str(currentLevel))
+    safeTeleports = 10
+    gameOver = False
 
+    def updateScoreboard():
+        scores.scoreboard.setText("Current Level: " + str(scores.currentLevel) + '\nLiving Robits: ' + str(len(robit.liveRobits)) + '\nDead Robits: ' + str(len(robit.deadRobits)) + '\nSafe Teleports: ' + str(scores.safeTeleports))
 
 def main():
-    print (hero.moveSet)
     global thisWindow
-    global currentLevel
     global thisGuy
-    thisWindow = GraphWin('Robits',600,550)
-    DrawGrid(thisWindow)
-    
-    currentLevel = 1
+
+    thisWindow = GraphWin('Robits',750,550)
+    DrawGame(thisWindow)
+    scores.scoreboard.draw(thisWindow)
+
     thisGuy = hero()
     thisGuy.gameSprite.setFill(hero.color)
     thisGuy.gameSprite.draw(thisWindow)
 
-
-
     while True:
         if len(robit.liveRobits) == 0:
-            currentLevel+=1
             NewLevel()
+        scores.updateScoreboard()
         thisGuy.MoveInput()
         robit.MoveRobits()
-        FindCollisions()
-
+        PlayerCollision()
+        RobitCollisions()
 
 
 
