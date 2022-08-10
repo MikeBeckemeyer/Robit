@@ -323,12 +323,17 @@ def NewLevel():
  #stats and rendering of right side of screen with game info
 class scores:
     currentLevel = 0
-    scoreboard = Text(Point(600,50),str(currentLevel))
+    scoreboard = Text(Point(650,50),str(currentLevel))
     safeTeleports = 10
     gameOver = False
 
     def updateScoreboard():
         scores.scoreboard.setText("Current Level: " + str(scores.currentLevel) + '\nLiving Robits: ' + str(len(robit.liveRobits)) + '\nDead Robits: ' + str(len(robit.deadRobits)) + '\nSafe Teleports: ' + str(scores.safeTeleports))
+
+    def drawRules():
+        rules = Text(Point(630,250),"Controls: \nMove Directions: \nQ W E \nA S D \nZ X C\n\nT - Teleport\n Y - Safe Teleport\n G - Wait\n\n\n\n use wait when you are safe\nfrom robits to earn\nmore safe teleports")
+
+        rules.draw(thisWindow)
 
 def main():
     global thisWindow
@@ -336,6 +341,7 @@ def main():
 
     thisWindow = GraphWin('Robits',750,550)
     DrawGame(thisWindow)
+    scores.drawRules()
     scores.scoreboard.draw(thisWindow)
 
     thisGuy = hero()
